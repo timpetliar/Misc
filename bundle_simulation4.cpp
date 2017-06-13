@@ -131,8 +131,8 @@ void DVD_Bundling::simulate_path(int time)
     }
     for (; t < BUNDLING_WEEK; t++) {				//new DVD released. NO BUNDLING YET
 	p_t_1 = prices[t];
-	p_t_2 = INFTY;
-	//p_t_2 = prices[t - NEW_RELEASE_WEEK];	
+	//p_t_2 = INFTY;
+	p_t_2 = prices[t - NEW_RELEASE_WEEK];	
  	a_t_1 = discount(t);
 	a_t_2 = discount(t - NEW_RELEASE_WEEK);
 	revenue[t] = g_update(p_t_1, p_t_2, a_t_1, a_t_2);
@@ -140,8 +140,8 @@ void DVD_Bundling::simulate_path(int time)
     for (; t < time; t++){					//Bundle offered. Continue until end of tracking period
 	bundle = true;		//bundle se calculation will now be activated
 	p_t_1 = prices[t];
-	p_t_2 = INFTY; 
-    	//p_t_2 = prices[t - NEW_RELEASE_WEEK];
+	//p_t_2 = INFTY; 
+    	p_t_2 = prices[t - NEW_RELEASE_WEEK];
 	a_t_1 = discount(t);
 	a_t_2 = discount(t - NEW_RELEASE_WEEK);
 	revenue[t] = g_update(p_t_1, p_t_2, a_t_1, a_t_2); 
@@ -288,7 +288,7 @@ int main()
         return 4; 
     }
 
-    ofs.open("bundling_revenue2.csv");
+    ofs.open("bundling_revenue.csv");
     if (! ofs.is_open() ) {
         cout << "Error. Cannot open output file" << endl;
         return 4;
