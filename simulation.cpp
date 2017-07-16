@@ -7,6 +7,7 @@ using namespace std;
 #define INFTY 10000
 #define WEEKS_TO_BUNDLING 0
 #define BUNDLING_WEEK NEW_RELEASE_WEEK + WEEKS_TO_BUNDLING 
+#define TSIZE 260
 class G_Array {
 //private data
 	private:
@@ -108,8 +109,10 @@ class Bundle_Simulation {
 		void g_update(double p_t_1, double p_t_2, double  a_t_1, double a_t_2, int t);
 		double discount(int t);							// TBD
 		double *revenue, *rev_bundle, *rev_sep;
-		double omega, tau; 
-		Bundle_Simulation(double omega, double tau, int prices_size);
+		double omega;
+		int tau; 
+		Bundle_Simulation(double omega, int tau, int prices_size);
+		Bundle_Simulation(double eta, double phi, double  nu, double psi, int tau, double omega, int num_boxes, int prices_size);
 		
 			
 
@@ -118,7 +121,16 @@ class Bundle_Simulation {
 		double a_t_1, a_t_2;					//discount factor
 		int prices_size;
 };
-Bundle_Simulation::Bundle_Simulation(double omega, double tau, int prices_size): omega{omega}, tau{tau}, prices_size{prices_size}{}
+/**/
+Bundle_Simulation::Bundle_Simulation(double omega, int tau, int prices_size): omega{omega}, tau{tau}, prices_size{prices_size} {}
+
+/**/
+Bundle_Simulation::Bundle_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size):
+  	omega{omega}, tau{tau}, prices_size{prices_size}{}
+	
+
+
+/**/
 double Bundle_Simulation::discount (int t) {
     double a_t;
     if (t <= tau)
@@ -264,6 +276,7 @@ for (i=0; i < num_boxes; i++) {
 	for (j=0; j < num_boxes; j++) {
                  if( (i == num_boxes -1) || (j == num_boxes -1) ) {
                          g[GIDX(i,j)] = 0;
+			//cout<< "a" << endl;
                         }
                  else{
                          g[GIDX(i,j)] = eta * f * step_size*step_size;
@@ -274,11 +287,58 @@ for (i=0; i < num_boxes; i++) {
 
 }
 
+
+/**/
+class Independent_Simulation: public Bundle_Simulation {
+	public:
+		Independent_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size);
+		~Independent_Simulation(){}
+};
+
+/**/
+Independent_Simulation::Independent_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size):omega{omega}, tau{tau}, prices_size{prices_size}{
+
+	        g = new Independent(eta, phi, nu, psi, tau, num_boxes, prices_size);
+}
 	
 
 int main() {
+	/*double q_val[TSIZE];
+	double p_val[TSIZE]
+	 ifstream ifs;
+        ostream ofs;
+
+
+	int i=0, t=0;
+    char c;
+    string line;
+
+    cout << "Program starts" << endl;
+
+    //open input & otput files
+    ifs.open("pqdata.csv");
+    if (! ifs.is_open() ) {
+        cout << "Error. Cannot open input file" << endl;
+        return 4;
+    }
+
+    ofs.open("weekly_revenues.csv");
+    if (! ofs.is_open() ) {
+        cout << "Error. Cannot open output file" << endl;
+        return 4;
+    }
+
+    // read input data
+    getline(ifs, line);         //skip 1st line
+    //cout << "line " << line << endl;
+    while ((ifs >> t >> c >> p_val[i] >> c >> q_val[i]) && (c==',')) { i++; }
+*/
+
+
+	
 	Independent * test;
-	test = new Independent (2000, .03, .005, 50, 3, 1501, 260);
+	test = new Independent (2000, .03, .005, 50, 3, 10, 260);
+	test->initialize_array(); 
 	delete test;
 	return 0;
 }
