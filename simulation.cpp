@@ -38,7 +38,8 @@ class G_Array {
 		
 }; //close class definition
 	
-G_Array::G_Array( double eta, double phi, double  nu, double psi, double tau, int num_boxes, int prices_size): eta{eta}, phi{phi}, nu{nu}, psi{psi}, tau{tau}, num_boxes{num_boxes}, prices_size{prices_size}, bundle{false} {
+G_Array::G_Array( double eta, double phi, double  nu, double psi, double tau, int num_boxes, int prices_size): 
+	eta{eta}, phi{phi}, nu{nu}, psi{psi}, tau{tau}, num_boxes{num_boxes}, prices_size{prices_size}, bundle{false} {
 		step_size = psi / (num_boxes - 1);
 		f = 0; 					//should be re-initialized in dervived classes
 		g = new double [num_boxes * num_boxes];
@@ -96,7 +97,6 @@ void inline G_Array:: buy_none(int i, int j){
 
 class Bundle_Simulation {
 	public:
-		double *prices;
 		void simulate_path(int time);
 		double compute_val_both(int i, int j);
 		double compute_val_1(int i, int j);
@@ -110,13 +110,14 @@ class Bundle_Simulation {
 		double discount(int t);							// TBD
 		double *revenue, *rev_bundle, *rev_sep;
 		double omega;
-		int tau; 
+		int tau;
+	       	double *prices;	
 		Bundle_Simulation(double omega, int tau, int prices_size);
-		Bundle_Simulation(double eta, double phi, double  nu, double psi, int tau, double omega, int num_boxes, int prices_size);
+		Bundle_Simulation(double eta, double phi, double  nu, double psi, int tau, double omega, int num_boxes, int prices_size, double* prices);
 		
 			
 
-	private:
+	protected:
 		G_Array *g;
 		double a_t_1, a_t_2;					//discount factor
 		int prices_size;
@@ -125,8 +126,8 @@ class Bundle_Simulation {
 Bundle_Simulation::Bundle_Simulation(double omega, int tau, int prices_size): omega{omega}, tau{tau}, prices_size{prices_size} {}
 
 /**/
-Bundle_Simulation::Bundle_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size):
-  	omega{omega}, tau{tau}, prices_size{prices_size}{}
+Bundle_Simulation::Bundle_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size, double *prices):
+  	omega{omega}, tau{tau}, prices_size{prices_size}, prices{prices}{}
 	
 
 
@@ -263,7 +264,6 @@ class Independent:public G_Array {
 
 Independent::Independent(double eta, double phi, double  nu, double psi, double tau, int num_boxes, int prices_size):
 	 G_Array(eta, phi, nu, psi, tau, num_boxes, prices_size){
-
 	f = (double)1/(psi*psi);
 	initialize_array();
 	
@@ -291,22 +291,34 @@ for (i=0; i < num_boxes; i++) {
 /**/
 class Independent_Simulation: public Bundle_Simulation {
 	public:
-		Independent_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size);
+		Independent_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size, double *prices);
 		~Independent_Simulation(){}
+		void NPV();
 };
 
 /**/
-Independent_Simulation::Independent_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size):omega{omega}, tau{tau}, prices_size{prices_size}{
-
-	        g = new Independent(eta, phi, nu, psi, tau, num_boxes, prices_size);
+Independent_Simulation::Independent_Simulation(double eta, double phi, double nu, double psi, int tau, double omega, int num_boxes, int prices_size, double *prices):
+	Bundle_Simulation(eta, phi, nu, psi, tau, omega, num_boxes, prices_size, prices) {
+		revenue = new double[prices_size];
+	        g = new Independent(eta, phi, nu, psi, tau,  num_boxes, prices_size);
 }
 	
+/**/
+void Independent_Simulation::NPV(){
+	double total = 0;
+	for (int i = 0; i<TSIZE; i++){
+		total =+revenue[i];
+	}
+	cout<<total<<endl;
+	return;
+}
 
+/**/
 int main() {
-	/*double q_val[TSIZE];
-	double p_val[TSIZE]
-	 ifstream ifs;
-        ostream ofs;
+	double q_val[TSIZE];
+	double p_val[TSIZE];
+	ifstream ifs;
+        ofstream ofs;
 
 
 	int i=0, t=0;
@@ -332,7 +344,7 @@ int main() {
     getline(ifs, line);         //skip 1st line
     //cout << "line " << line << endl;
     while ((ifs >> t >> c >> p_val[i] >> c >> q_val[i]) && (c==',')) { i++; }
-*/
+
 
 
 	
@@ -340,6 +352,16 @@ int main() {
 	test = new Independent (2000, .03, .005, 50, 3, 10, 260);
 	test->initialize_array(); 
 	delete test;
+
+	Independent_Simulation *test2 = new Independent_Simulation(2000, .03, .005, 50, 3,  0.20, 1501, TSIZE, p_val);
+	test2->simulate_path(260);
+	test2->NPV();
+	delete test2;
+	
+	ifs.close();
+	ofs.close();
+
+
 	return 0;
 }
  
