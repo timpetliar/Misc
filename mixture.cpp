@@ -391,17 +391,24 @@ int main()
     
     test.NPV(); */
     
-    double npv, npv_sep, npv_bundle;
-	 for (double rho = 0; rho <= 1; rho+= 0.1){
+    ofs <<" rho" << "," << "npv_bundle" <<","<<" npv_no_bundle"<<","<<"percent_gain" << endl;
+    double npv, npv_sep, npv_bundle, npv_no_bundle, percent_gain;
+	 for (double rho = 0; rho <= 1.01; rho+= 0.05){
 			cout<< rho << endl;
-	/*		DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, rho , 208);
+			DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 1501, p_val, TSIZE, rho , 156);
+			DVD_Bundling test2(2000, .03, .005, 50, 3,  0.20, 1501, p_val, TSIZE, rho , 260);
 			test.simulate_path(TSIZE);
 			test.NPV();
-			double npv = test.npv;
-			double npv_sep = test.npv_sep;
-			double npv_bundle = test.npv_bundle;
-			ofs << rho << "," << npv << endl;
-//			cout << "rho= " << npv << endl;  */
+			test2.simulate_path(TSIZE);
+			test2.NPV();
+			npv_bundle = test.npv;
+			npv_no_bundle = test2.npv;
+			percent_gain = (npv_bundle - npv_no_bundle)/npv_no_bundle ;
+			//double npv_sep = test.npv_sep;
+			//double npv_bundle = test.npv_bundle;
+ 			ofs << rho << "," << npv_bundle <<","<< npv_no_bundle<<","<<percent_gain << endl;
+
+			//			cout << "rho= " << npv << endl;  
 	}
 	ifs.close();
 	ofs.close();
