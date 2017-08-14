@@ -363,7 +363,7 @@ int main()
         return 4; 
     }
 
-    ofs.open("bundling_discount_2.csv");
+    ofs.open("bundling_discount_omega=1.csv");
     if (! ofs.is_open() ) {
         cout << "Error. Cannot open output file" << endl;
         return 4;
@@ -374,8 +374,8 @@ int main()
     //cout << "line " << line << endl;
     while ((ifs >> t >> c >> p_val[i] >> c >> q_val[i]) && (c==',')) { i++; }
 
-
-    /*DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 0, 208); //test is instance of DVD_Bundling clas
+/*
+    DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 1, 156,10.5 ); //test is instance of DVD_Bundling clas
    
     //test.print_price_array(); 
    
@@ -395,8 +395,9 @@ int main()
     ifs.close();
     ofs.close();
     
-    test.NPV(); */
-    
+    test.NPV(); 
+  */
+
    /* ofs <<" rho" << "," << "npv_bundle" <<","<<" npv_no_bundle"<<","<<"percent_gain" << endl;
     double npv, npv_sep, npv_bundle, npv_no_bundle, percent_gain;
 	 for (double rho = 0; rho <= 1.01; rho+= 0.05){
@@ -416,18 +417,51 @@ int main()
 
 			//			cout << "rho= " << npv << endl;  
 	} */
-    	ofs << "bundling_discount" << "," << "npv" << endl;
-	double npv;
+    	//ofs << "bundling_discount" << "," << "npv"<<","<<"npv2" << endl;
+	double npv, npv2;
+	double percent1;
+	double max = 0;
 	double discount;
-	for (int k = 0; k <= 34; k++){
+	double optimum;
+	for (int k = 0; k <=34; k++){
 		discount = k * 0.5;
 		cout << discount << endl;
-		DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 1 , 156, discount);
-		test.simulate_path(TSIZE);
-		test.NPV();
-		npv = test.npv;
-		ofs << discount << "," << npv << endl;
-	}
+	//	DVD_Bundling test(4000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 1 , 156, discount);
+		DVD_Bundling test2(2000, .03, .005, 50, 3, 0.20, 501 ,p_val, TSIZE, 1 , 156, discount);
+	//	test.simulate_path(TSIZE);
+		test2.simulate_path(TSIZE);
+	//	test.NPV();
+		test2.NPV();
+	//	npv = test.npv;
+		npv2 = test2.npv;
+		ofs << discount << "," <<npv2<< endl;
+		if (npv2 > max) { 
+			max = npv2;
+			optimum = discount;
+		}
+		
+	} 
+	cout << optimum << endl; 
+
+	/*double npv, npv2, percent1;
+	ofs<<"PAR"<<","<< "no bundling"<<"," <<  "bundling" << "," << "percent gain"<<endl;
+	DVD_Bundling test1(2000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 1 , 156, 0);
+	DVD_Bundling test2(2000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 1 , 156, 5);
+	//test3 =  DVD_Bundling(1000, .03, .005, 50, 3,  0.20, 501, p_val, TSIZE, 1 , 156, 5); 
+	test1.simulate_path(TSIZE);
+	test2.simulate_path(TSIZE);
+	//test3.simulate_path(TSIZE);
+	test1.NPV();
+	test2.NPV();
+	npv = test1.npv;
+	npv2 = test2.npv;
+	//npv2 = test3.NPV();
+	percent1 = (double)100 * (npv2 - npv)/npv; 
+	cout << "percent gain = " << percent1 << endl;
+*/
+
+
+
 	ifs.close();
 	ofs.close();
     cout << "\nProgram ends" << endl;   
