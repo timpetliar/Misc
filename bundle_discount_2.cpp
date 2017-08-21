@@ -174,6 +174,9 @@ void DVD_Bundling::simulate_path(int time)
 /* */
 double DVD_Bundling::buy_bundle(double p_b, int i, int j){
     double g_new;
+    g[GIDX(0,0)] += phi * g[GIDX(i,j)];                                                     //Already bought bot
+    double r = p_b * phi * g[GIDX(i,j)];
+
     if( (i == num_boxes -1) || (j == num_boxes -1) ) {g_new = 0;}
     else if ( i == j) {
         g_new = (1 - phi) *( (1 - nu) * g[GIDX(i,j)] +  nu * (rho * eta * f_perf * step_size + (1-rho) * eta * f_ind * step_size * step_size) );
@@ -181,16 +184,19 @@ double DVD_Bundling::buy_bundle(double p_b, int i, int j){
     else{
         g_new = (1 - phi) *( (1 - nu) * g[GIDX(i,j)] + (1 - rho ) * nu * eta * f_ind * step_size * step_size );
     }
-    g[GIDX(0,0)] += phi * g[GIDX(i,j)];
-    double r = p_b * phi * g[GIDX(i,j)];
-    g[GIDX(i,j)] = g_new;
-	return r; 
+/*    g[GIDX(0,0)] += phi * g[GIDX(i,j)];
+    double r = p_b * phi * g[GIDX(i,j)]; */
+    g[GIDX(i,j)] = g_new; 
+    return r; 
 
 }
 
 /* */
 double DVD_Bundling::buy_1(double p_t_1, int i, int j){
     double g_new;
+    g[GIDX(0,j)] += phi *  g[GIDX(i,j)];
+    double r = p_t_1 * phi * g[GIDX(i,j)];
+
     if( (i == num_boxes -1) || (j == num_boxes -1) ) {g_new = 0;}
     else if ( i == j ) {
         g_new =  (1 - nu) * g[GIDX(i,j)] +  nu * (rho * eta * f_perf * step_size + (1-rho) * eta * f_ind * step_size * step_size) ;
@@ -198,14 +204,16 @@ double DVD_Bundling::buy_1(double p_t_1, int i, int j){
     else{
         g_new =  (1 - nu) * g[GIDX(i,j)] + (1 - rho) * nu * eta * f_ind * step_size * step_size ;
     }  
-    g[GIDX(0,j)] += phi * (1 - nu) * g[GIDX(i,j)];                          //May buy DVD2  in future
-    double r = p_t_1 * phi * g_new;
-    g[GIDX(i,j)] = (1 - phi ) * g_new;
+/*    g[GIDX(0,j)] += phi * (1 - nu) * g[GIDX(i,j)];                          //May buy DVD2  in future
+    double r = p_t_1 * phi * g_new;  */
+    g[GIDX(i,j)] = g_new;
     return r;
 }
 
 double DVD_Bundling::buy_2 (double p_t_2,int i,int j){
     double g_new;
+    g[GIDX(i,0)] += phi * g[GIDX(i,j)];
+    double r = p_t_2 * phi * g[GIDX(i,j)];
     if( (i == num_boxes -1) || (j == num_boxes -1) ) {g_new = 0;}
     else if ( i == j ) {
         g_new = (1 - phi) * ( (1 - nu) * g[GIDX(i,j)] +  nu * (rho * eta * f_perf * step_size + (1-rho) * eta * f_ind * step_size * step_size) );
@@ -213,14 +221,16 @@ double DVD_Bundling::buy_2 (double p_t_2,int i,int j){
     else {
         g_new = (1 - phi) *( (1 - nu) * g[GIDX(i,j)] + (1 - rho) * nu * eta * f_ind * step_size * step_size );
     }  
-    g[GIDX(i,0)] += phi * (1 - nu) * g[GIDX(i,j)];                          //May buy DVD1 in future
-    double r = p_t_2 * phi * g[GIDX(i,j)];
-	g[GIDX(i,j)] = g_new;
-	return r;
+/*    g[GIDX(i,0)] += phi * (1 - nu) * g[GIDX(i,j)];                          //May buy DVD1 in future
+    double r = p_t_2 * phi * g[GIDX(i,j)]; */
+    g[GIDX(i,j)] = g_new;
+    return r;
 }
 
 double DVD_Bundling::buy_both(double p_t_1, double p_t_2, int i, int j){
     double g_new;
+    g[GIDX(0,0)] += phi * g[GIDX(i,j)];
+    double r = (p_t_1 + p_t_2) * phi * g[GIDX(i,j)];
     if( (i == num_boxes -1) || (j == num_boxes -1) ) {g_new = 0;}
     else if ( i == j ){
         g_new = (1 - phi) *(1 - nu) * g[GIDX(i,j)] +  nu * (rho * eta * f_perf * step_size + (1-rho) * eta * f_ind * step_size * step_size);
@@ -228,9 +238,9 @@ double DVD_Bundling::buy_both(double p_t_1, double p_t_2, int i, int j){
     else {
         g_new = (1- phi) * (1 - nu) * g[GIDX(i,j)] + (1 - rho) * nu * eta * f_ind * step_size *step_size;
     }
-    g[GIDX(0,0)] += phi * (1 - nu) * g[GIDX(i,j)]; 
-    double r = (p_t_1 + p_t_2) * phi * g[GIDX(i,j)];
-	g[GIDX(i,j)] = g_new;
+/*    g[GIDX(0,0)] += phi * (1 - nu) * g[GIDX(i,j)]; 
+    double r = (p_t_1 + p_t_2) * phi * g[GIDX(i,j)]; */
+    g[GIDX(i,j)] = g_new;
     return r;
 }
 void DVD_Bundling::buy_none (int i, int j){
