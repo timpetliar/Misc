@@ -64,6 +64,8 @@ public:
     double buy_bundle(double p, int i, int j);
     double buy_1(double p, int i, int j);
     double buy_2(double p, int i, int j);
+    double buy_bundle_1_only(double p, int i, int j);
+    double buy_bundle_2_only(double p, int i, int j);
     void  buy_none(int i, int j);   
     double buy_both(double p1, double p2, int i, int j);
 
@@ -166,11 +168,11 @@ void DVD_Bundling::simulate_path(int time)
     for (; t < bundling_week; t++) {                //new DVD released. NO BUNDLING YET
         if (t >= (NEW_RELEASE_WEEK + tau)){
 		phi_2 = phi_time_2;
-		phi_3 = phi_time_2;
 	}
+	phi_3 = phi_2 ;
 	p_t_1 = prices[t];
-        p_t_2 = INFTY;
-        //p_t_2 = prices[t - NEW_RELEASE_WEEK];   
+        //p_t_2 = INFTY;
+        p_t_2 = prices[t - NEW_RELEASE_WEEK];   
         a_t_1 = 1;
         a_t_2 = 1;
         g_update(p_t_1, p_t_2, a_t_1, a_t_2, t);
@@ -178,12 +180,12 @@ void DVD_Bundling::simulate_path(int time)
     for (; t < time; t++){                  //Bundle offered. Continue until end of tracking period
         if(t >= (NEW_RELEASE_WEEK + tau)){
 		phi_2 = phi_time_2;
-		phi_3 = phi_time_2;
 	}
+	phi_3 = phi_time_1;
 	bundle = true;      //bundle se calculation will now be activated
         p_t_1 = prices[t];
-        p_t_2 = INFTY; 
-        //p_t_2 = prices[t - NEW_RELEASE_WEEK];
+        //p_t_2 = INFTY; 
+        p_t_2 = prices[t - NEW_RELEASE_WEEK];
         a_t_1 = 1;
         a_t_2 = 1;
         g_update(p_t_1, p_t_2, a_t_1, a_t_2, t); 
@@ -210,8 +212,42 @@ double DVD_Bundling::buy_bundle(double p_b, int i, int j){
     return r; 
 
 }
+double DVD_Bundling::buy_bundle_1_only(double p_t_1, int i, int j){
+    double g_new;
+    g[GIDX(0,j)] += phi_3 *  g[GIDX(i,j)];
+    double r = p_t_1 * phi_3 * g[GIDX(i,j)];
 
-/* */
+    if( (i == num_boxes -1) || (j == num_boxes -1) ) {g_new = 0;}
+    else if ( i == j ) {
+        g_new =  (1 - phi_3) * (1 - nu) * g[GIDX(i,j)] +  nu * (rho * eta * f_perf * step_size + (1-rho) * eta * f_ind * step_size * step_size) ;
+    }
+    else{
+        g_new = (1 - phi_3) * (1 - nu) * g[GIDX(i,j)] + (1 - rho) * nu * eta * f_ind * step_size * step_size ;
+    }
+/*    g[GIDX(0,j)] += phi * (1 - nu) * g[GIDX(i,j)];                          //May buy DVD2  in future
+    double r = p_t_1 * phi * g_new;  */
+    g[GIDX(i,j)] = g_new;
+    return r;
+}
+double DVD_Bundling::buy_bundle_2_only(double p_t_2, int i, int j){
+    double g_new;
+    g[GIDX(0,j)] += phi_3 *  g[GIDX(i,j)];
+    double r = p_t_2 * phi_3 * g[GIDX(i,j)];
+
+    if( (i == num_boxes -1) || (j == num_boxes -1) ) {g_new = 0;}
+    else if ( i == j ) {
+        g_new =  (1 - phi_3) * (1 - nu) * g[GIDX(i,j)] +  nu * (rho * eta * f_perf * step_size + (1-rho) * eta * f_ind * step_size * step_size) ;
+    }
+    else{
+        g_new = (1 - phi_3) * (1 - nu) * g[GIDX(i,j)] + (1 - rho) * nu * eta * f_ind * step_size * step_size ;
+    }
+/*    g[GIDX(0,j)] += phi * (1 - nu) * g[GIDX(i,j)];                          //May buy DVD2  in future
+    double r = p_t_1 * phi * g_new;  */
+    g[GIDX(i,j)] = g_new;
+    return r;
+}
+
+
 double DVD_Bundling::buy_1(double p_t_1, int i, int j){
     double g_new;
     g[GIDX(0,j)] += phi_1 *  g[GIDX(i,j)];
@@ -292,12 +328,12 @@ void  DVD_Bundling::g_update(double p_t_1, double p_t_2, double  a_t_1, double a
             if ( (p_b <= (a_t_1*((double)i + 0.5) + a_t_2 *((double) j + 0.5))* step_size) && ( bundle == true) ){          //Buy bundle ?
                 
                 if ( (a_t_1 * ((double) i + 0.5) * step_size) < (p_t_1 - bundling_discount) ){
-                    temp = buy_2(p_t_2, i, j);          
+                    temp = buy_bundle_2_only(p_t_2, i, j);          
                     rev += temp;
                     rev_seperates += temp;
                 }
                 else if( (a_t_2 *((double) j + 0.5) * step_size) < (p_t_2 - bundling_discount) ){
-                    temp = buy_1(p_t_1, i, j);
+                    temp = buy_bundle_1_only(p_t_1, i, j);
                     rev += temp;
                     rev_seperates += temp;
                 
@@ -399,7 +435,7 @@ int main()
         return 4; 
     }
 
-    ofs.open("new_bundling.csv");
+    ofs.open("new_percent_gain.csv");
     if (! ofs.is_open() ) {
         cout << "Error. Cannot open output file" << endl;
         return 4;
@@ -411,7 +447,7 @@ int main()
     while ((ifs >> t >> c >> p_val[i] >> c >> q_val[i]) && (c==',')) { i++; }
 
 
-    DVD_Bundling test(2000, .024, .0010, .005, 50, 10,  1.0, 1501, p_val, TSIZE, 0, 156, 5); //test is instance of DVD_Bundling clas
+    DVD_Bundling test(2000, .024, .024, .005, 50, 10,  1.0, 1501, p_val, TSIZE, 0, 156,0 ); //test is instance of DVD_Bundling clas
    
     //test.print_price_array(); 
    
@@ -431,14 +467,16 @@ int main()
     ifs.close();
     ofs.close();
     
-    test.NPV(); 
+    test.NPV();  
     
    /* ofs <<" rho" << "," << "npv_bundle" <<","<<" npv_no_bundle"<<","<<"percent_gain" << endl;
     double npv, npv_sep, npv_bundle, npv_no_bundle, percent_gain;
-	 for (double rho = 0; rho <= 1.01; rho+= 0.05){
+	double rho; 
+    	for (int i = 0; i <= 20; i++  ){
+			rho = 0.05 * i;
 			cout<< rho << endl;
-			DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 1501, p_val, TSIZE, rho , 156, 5);
-			DVD_Bundling test2(2000, .03, .005, 50, 3,  0.20, 1501, p_val, TSIZE, rho , 260, 5);
+			DVD_Bundling test(2000, .024, 0.0010, .005, 50, 10,  1.0, 1501, p_val, TSIZE, rho , 208, 0);
+			DVD_Bundling test2(2000, .024, .0010, .005, 50, 10,  1.0, 1501, p_val, TSIZE, rho , 260, 0);
 			test.simulate_path(TSIZE);
 			test.NPV();
 			test2.simulate_path(TSIZE);
@@ -452,21 +490,21 @@ int main()
 
 			//			cout << "rho= " << npv << endl;  
 	} */
-/*    	 ofs << "bundling_discount" << "," << "npv" << endl;
+    	/* ofs << "bundling_discount" << "," << "npv" << endl;
 	double npv;
 	double discount;
-	for (int k = 0; k <= 34; k++){
-		discount = k * 0.5;
+	for (int k = 100; k <= 200; k++){
+		discount = k * 0.1;
 		cout << discount << endl;
-		DVD_Bundling test(2000, .03, .005, 50, 3,  0.20, 1501, p_val, TSIZE, 0 , 156, discount);
+		DVD_Bundling test(2000, .024, .0010, .005, 50, 10,  1.0, 501, p_val, TSIZE, 1.0 , 156 , discount);
 		test.simulate_path(TSIZE);
 		test.NPV();
 		npv = test.npv;
 		ofs << discount << "," << npv << endl;
 	} 
 	ifs.close();
-	ofs.close();
+	ofs.close(); */
     cout << "\nProgram ends" << endl;   
-	*/
+	
 
 }
